@@ -2,6 +2,7 @@
 #define EXPR_H
 
 #include <exception>
+#include <limits>
 
 // COMP6035 Coursework 2: Template Metaprogramming. 
 // Part III -- Multiple Variables 
@@ -101,7 +102,9 @@ struct LIT {
 
     enum {
         LOWER = C, 
-        UPPER = C
+        UPPER = C,
+        L_NUM = 0,
+        R_NUM = 0
     };
 
     //Evaluates the expression, x is the array of variables
@@ -227,8 +230,8 @@ struct DIV {
     template<class FRIEND_T1> friend struct X;
 
     enum {
-        LOWER = L::LOWER / R::LOWER,
-        UPPER = L::UPPER / R::UPPER,
+        LOWER = (R::LOWER == 0) ? 0 : L::LOWER / R::LOWER,
+        UPPER = (R::UPPER == 0) ? std::numeric_limits<int>::max() : L::UPPER / R::UPPER,
         L_NUM = L::L_NUM + L::R_NUM,
         R_NUM = R::L_NUM + R::R_NUM
     };
