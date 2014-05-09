@@ -51,14 +51,38 @@ void print_test(const char* equation, TestDetails td) {
 
 
 int main() {
-    int a[] = {1, 3, 2, 4};
+    int inputs[10][10];
+    int outputs[10];
 
-    //X<BOUNDS<0, 10> > x;
-    //ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > x; 
+    for (int i = 0; i < 10; i++) { 
+        for (int j = 0; j < 10; j++) {
+            inputs[i][j] = (j + 1); 
+        }
+    }
+    
+    X<BOUNDS<0, 10> > ex_1;
+    outputs[0] = ex_1.eval(inputs[0]);
+    printf("Example 1 Answer: %d Expected: %d\n", outputs[0], 1);
 
-    MULT<ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > >, ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > >  x; 
+    ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > ex_2; 
+    outputs[1] = ex_2.eval(inputs[1]);
+    printf("Example 2 Answer: %d Expected: %d\n", outputs[1], 1 + 2);
+    
+    ADD<ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > >, ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > >  ex_3; 
+    outputs[2] = ex_3.eval(inputs[2]);
+    printf("Example 3 Answer: %d Expected: %d\n", outputs[2], (1 + 2) + (3 + 4));
+    
+    ADD<X<BOUNDS<0, 10> >, ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > >  ex_4; 
+    outputs[3] = ex_4.eval(inputs[3]);
+    printf("Example 4 Answer: %d Expected: %d\n", outputs[3], 1 + (2 + 3));
+    
+    MULT<ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > >, ADD<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > >  ex_5; 
+    outputs[4] = ex_5.eval(inputs[4]);
+    printf("Example 5 Answer: %d Expected: %d\n", outputs[4], (1 + 2) * (3 + 4));
 
-    printf("Answer: %d Expected: %d\n", x.eval(a), (1 + 3) * (2 + 4));
+    SUB<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > ex_6;
+    outputs[5] = ex_6.eval(inputs[5]);
+    printf("Example 6 Answer: %d Expected: %d\n", outputs[5], (1 - 2));
 
     /*
     printf("\nCOMP6035 Coursework 2: Template Metaprogramming. \n"
