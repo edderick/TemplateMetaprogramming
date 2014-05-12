@@ -158,6 +158,28 @@ private:
 //R is the right subexpression
 template<class L, class R> 
 struct MULT {
+private:
+    template <int I>
+    static inline int _eval(int x[]) {
+        return L:: template _eval<I>(x) * R:: template _eval<L_NUM + I>(x);
+    };
+
+    //x[a, b] * x[c, d]
+    static const int a = L::LOWER;
+    static const int b = L::UPPER;
+    static const int c = R::LOWER;
+    static const int d = R::UPPER;
+
+    //Calculate minimun value for expression
+    static const int min_a = (a*c < a*d) ? a*c : a*d;
+    static const int min_b = (b*c < b*d) ? b*c : b*d;
+    static const int MIN = (min_a < min_b) ? min_a : min_b;
+
+    //Calculate maximum value for expression
+    static const int max_a = (a*c > a*d) ? a*c : a*d;
+    static const int max_b = (b*c > b*d) ? b*c : b*d;
+    static const int MAX = (max_a > max_b) ? max_a : max_b;
+
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -165,6 +187,7 @@ struct MULT {
     template<int FRIEND_T1> friend struct LIT;
     template<class FRIEND_T1> friend struct X;
 
+public:
     enum {
         LOWER = L::LOWER * R::LOWER,
         UPPER = L::UPPER * R::UPPER,
@@ -176,11 +199,6 @@ struct MULT {
     static inline int eval(int x[]) {
         int i = 0;
         return L:: template _eval<0>(x) * R:: template _eval<L_NUM>(x);
-    };
-private:
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) * R:: template _eval<L_NUM + I>(x);
     };
 };
 
@@ -221,7 +239,32 @@ private:
 //R is the right subexpression
 template<class L, class R> 
 struct DIV {
+private:   
+    template <int I>
+    static inline int _eval(int x[]) {
+        return L:: template _eval<I>(x) / R:: template _eval<L_NUM + I>(x);
+    };
 
+    //x[a, b] / x[c, d]
+    static const int a = L::LOWER;
+    static const int b = L::UPPER;
+    // if c or d is zero, round to the closest |1| to prevent x/0
+    static const int c = (R::LOWER == 0) ? 1 : R::LOWER;
+    static const int d = (R::UPPER == 0) ? -1: R::UPPER;
+
+    // Calculate minimum value for expression
+    static const int min_a = (a/c < a/d) ? a/c : a/d;
+    static const int min_b = (b/c < b/d) ? b/c : b/d;
+    static const int min_ab = (min_a < min_b) ? min_a : min_b;
+    static const int min_neg = (c <= -1 && d >= -1) ? ((min_ab < -b) ? min_ab : -b) : min_ab;
+    static const int MIN = (c <= 1 && d >= 1) ? ((min_neg <  a) ? min_neg :  a) : min_neg;
+
+    // Calculate maximum value for expression
+    static const int max_a = (a/c > a/d) ? a/c : a/d;
+    static const int max_b = (b/c > b/d) ? b/c : b/d;
+    static const int max_ab = (max_a > max_b) ? max_a : max_b;
+    static const int max_neg = (c <= -1 && d >= -1) ? ((max_ab > -a) ? max_ab : -a) : max_ab;
+    static const int MAX = (c <= 1 && d >=1) ? ((max_neg > b) ? max_neg :  b) : max_neg;
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -229,6 +272,7 @@ struct DIV {
     template<int FRIEND_T1> friend struct LIT;
     template<class FRIEND_T1> friend struct X;
 
+public: 
     enum {
         LOWER = (R::LOWER == 0) ? 0 : L::LOWER / R::LOWER,
         UPPER = (R::UPPER == 0) ? std::numeric_limits<int>::max() : L::UPPER / R::UPPER,
@@ -240,11 +284,6 @@ struct DIV {
     static inline int eval(int x[]) {
         int i = 0;
         return L:: template _eval<0>(x) / R:: template _eval<L_NUM>(x);
-    };
-private:   
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) / R:: template _eval<L_NUM + I>(x);
     };
 };
 
