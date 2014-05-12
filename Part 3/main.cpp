@@ -61,7 +61,7 @@ int main() {
     outputs[6] = ex_7.eval(inputs[6]);
     printf("Example 7 Answer: %d Expected: %d\n", outputs[6], 1 + (2 - 2) * (3 - 3));
    
-    // (((x0 + x1) * 3) / (x2 - x3 + x4) + (x5 * (x6 + x7)))  * 9
+    // (((x0 + x1) * 3) / (x2 - (x3 + x4)) + (x5 * (x6 + x7)))  * 9
     MULT<
         ADD<
             DIV<
@@ -82,16 +82,20 @@ int main() {
         LIT<9> 
     > ex_8;
     outputs[7] = ex_8.eval(inputs[7]);
-    printf("Example 8 Answer: %d Expected: %d\n", outputs[7], (1 - 2));
+    printf("Example 8 Answer: %d Expected: %d\n", outputs[7], 
+            (((1 + 2) * 3) / (3 - (4 + 5)) + (6 * (7 + 8)))  * 9);
 
     // (5 + (5 + x))
     ADD<LIT<5>, ADD<LIT<5> , X<BOUNDS<0, 10> > > > ex_9;
     outputs[8] = ex_9.eval(inputs[8]);
     printf("Example 9 Answer: %d Expected: %d\n", outputs[8], (5 + (5 + 1)));
+
     // (X + (5 + Y))
     ADD<X<BOUNDS<0, 10> >, ADD<LIT<5>, X<BOUNDS<0,10> > > > ex_10;
     outputs[9] = ex_10.eval(inputs[9]);
     printf("Example 10 Answer: %d Expected: %d\n", outputs[9], (1  + (5 + 2)));
+
+
     //Competed succesfully, return 0
     return 0;
 }
