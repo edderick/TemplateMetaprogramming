@@ -81,18 +81,17 @@ int main() {
         >,
         LIT<9> 
     > ex_8;
-    
-
     outputs[7] = ex_8.eval(inputs[7]);
     printf("Example 8 Answer: %d Expected: %d\n", outputs[7], (1 - 2));
 
-    SUB<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > ex_9;
+    // (5 + (5 + x))
+    ADD<LIT<5>, ADD<LIT<5> , X<BOUNDS<0, 10> > > > ex_9;
     outputs[8] = ex_9.eval(inputs[8]);
-    printf("Example 9 Answer: %d Expected: %d\n", outputs[8], (1 - 2));
-
-    SUB<X<BOUNDS<0, 10> >, X<BOUNDS<0, 10> > > ex_10;
+    printf("Example 9 Answer: %d Expected: %d\n", outputs[8], (5 + (5 + 1)));
+    // (X + (5 + Y))
+    ADD<X<BOUNDS<0, 10> >, ADD<LIT<5>, X<BOUNDS<0,10> > > > ex_10;
     outputs[9] = ex_10.eval(inputs[9]);
-    printf("Example 10 Answer: %d Expected: %d\n", outputs[9], (1 - 2));
+    printf("Example 10 Answer: %d Expected: %d\n", outputs[9], (1  + (5 + 2)));
     //Competed succesfully, return 0
     return 0;
 }
