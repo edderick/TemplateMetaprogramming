@@ -53,6 +53,7 @@ struct BOUNDS {
 //Handles Variables 
 template<class B> 
 struct X {
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -93,6 +94,7 @@ private:
 //Handles literals (constants)
 template<int C> 
 struct LIT {
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -126,6 +128,7 @@ private:
 //R is the right subexpression
 template<class L, class R> 
 struct ADD {
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -180,6 +183,7 @@ private:
     static const int max_b = (b*c > b*d) ? b*c : b*d;
     static const int MAX = (max_a > max_b) ? max_a : max_b;
 
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -208,6 +212,7 @@ public:
 template<class L, class R> 
 struct SUB {
 
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
@@ -265,6 +270,8 @@ private:
     static const int max_ab = (max_a > max_b) ? max_a : max_b;
     static const int max_neg = (c <= -1 && d >= -1) ? ((max_ab > -a) ? max_ab : -a) : max_ab;
     static const int MAX = (c <= 1 && d >=1) ? ((max_neg > b) ? max_neg :  b) : max_neg;
+
+    //All other operators classes are defined as public to allow access to _eval
     template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
     template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
     template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
