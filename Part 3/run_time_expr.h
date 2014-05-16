@@ -2,7 +2,6 @@
 #define EXPR_H
 
 #include <exception>
-#include <limits>
 
 // COMP6035 Coursework 2: Template Metaprogramming. 
 // Part III -- Multiple Variables 
@@ -27,16 +26,16 @@
 // different bounds for each variable. 
 
 struct OutOfBoundsException: public std::exception { 
-    int upper, lower, var, index;
-    OutOfBoundsException(int lo, int hi, int x, int i) {
-        upper = hi; lower = lo; var = x; index = i;
+    int upper, lower, var;
+    OutOfBoundsException(int lo, int hi, int x) {
+        upper = hi; lower = lo; var = x;
     }
     virtual const char* what() const throw()
     { 
         char* buffer = new char[50];
         snprintf(buffer, 50,
-                "The variable x_%d = %d does not fall within the bounds (%d, %d).", 
-                var, index, lower, upper);
+                "The variable x=%d does not fall within the bounds (%d, %d).", 
+                var, lower, upper);
         return buffer;
     } 
 };
@@ -53,60 +52,39 @@ struct BOUNDS {
 //Handles Variables 
 template<class B> 
 struct X {
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
     enum {
         LOWER = B::LOWER, 
-        UPPER = B::UPPER,
-        L_NUM = 1,
-        R_NUM = 0
+        UPPER = B::UPPER
     };
     //Evaluates the expression, x is the array of variables
     //This function should be used by external callers.
     static inline int eval(int x[]) {
         if ((x[0] > B::UPPER) || (x[0] < B::LOWER)) {
-            throw new OutOfBoundsException(B::LOWER, B::UPPER, x[0], 0); 
+            throw new OutOfBoundsException(B::LOWER, B::UPPER, x[0]); 
         }
         return x[0];
     };
 
-private:
     // Evaluates the expression, x is the array of variables, i is the array
     // index. A reference has been used for i because the index is incremented
     // after use.
     //This function should be used by other binary operator classes
-    template<int I>
-    static inline int _eval(int x[]) {
-        if ((x[I] > B::UPPER) || (x[I] < B::LOWER)) {
-            throw new OutOfBoundsException(B::LOWER, B::UPPER, x[I], I); 
+    static inline int eval(int x[], int &i) {
+        if ((x[i] > B::UPPER) || (x[i] < B::LOWER)) {
+            throw new OutOfBoundsException(B::LOWER, B::UPPER, x[0]); 
         }
-        return x[I]; //Return x[i], and then increment i
+        return x[i++]; //Return x[i], and then increment i
     };
+
 };
 
 
 //Handles literals (constants)
 template<int C> 
 struct LIT {
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
     enum {
         LOWER = C, 
-        UPPER = C,
-        L_NUM = 0,
-        R_NUM = 0
+        UPPER = C
     };
 
     //Evaluates the expression, x is the array of variables
@@ -114,11 +92,10 @@ struct LIT {
     static inline int eval(int x[]) {
         return C;
     };
-private:
+
     //Evaluates the expression, x is the array of variables, i is the array index
     //This function should be used by other binary operator classes
-    template<int I>
-    static inline int _eval(int x[]) {
+    static inline int eval(int x[], int &i) {
         return C;
     };
 };
@@ -128,44 +105,27 @@ private:
 //R is the right subexpression
 template<class L, class R> 
 struct ADD {
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
     enum {
         LOWER = L::LOWER + R::LOWER,
-        UPPER = L::UPPER + R::UPPER,
-        L_NUM = L::L_NUM + L::R_NUM,
-        R_NUM = R::L_NUM + R::R_NUM
+        UPPER = L::UPPER + R::UPPER
     };
     //Evaluates the expression, x is the array of variables
     //This function should be used by external callers.
     static inline int eval(int x[]) {
         int i = 0;
-        return L:: template _eval<0>(x) + R:: template _eval<L_NUM>(x);
+        return L::eval(x, i) + R::eval(x, i);
     };
-private:   
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) + R:: template _eval<L_NUM + I>(x);
+    
+    static inline int eval(int x[], int &i) {
+        return L::eval(x, i) + R::eval(x, i);
     };
 };
 
-
-//Handles mulitplication
+//Handles multiplication
 //L is the left subexpression
 //R is the right subexpression
 template<class L, class R> 
 struct MULT {
-private:
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) * R:: template _eval<L_NUM + I>(x);
-    };
 
     //x[a, b] * x[c, d]
     static const int a = L::LOWER;
@@ -183,73 +143,55 @@ private:
     static const int max_b = (b*c > b*d) ? b*c : b*d;
     static const int MAX = (max_a > max_b) ? max_a : max_b;
 
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
-public:
-    enum {
+    enum {  
         LOWER = MIN,
         UPPER = MAX,
-        L_NUM = L::L_NUM + L::R_NUM,
-        R_NUM = R::L_NUM + R::R_NUM
     };
+
     //Evaluates the expression, x is the array of variables
     //This function should be used by external callers.
     static inline int eval(int x[]) {
         int i = 0;
-        return L:: template _eval<0>(x) * R:: template _eval<L_NUM>(x);
+        return L::eval(x, i) * R::eval(x, i);
+    };
+
+    //Evaluates the expression, x is the array of variables, i is the array index
+    //This function should be used by other binary operator classes
+    static inline int eval(int x[], int &i) {
+        return L::eval(x, i) * R::eval(x, i);
     };
 };
 
 //Handles subtraction
 //L is the left subexpression
 //R is the right subexpression
-template<class L, class R> 
+template<class L, class R>
 struct SUB {
-
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
     enum {
         LOWER = L::LOWER - R::LOWER,
-        UPPER = L::UPPER - R::UPPER,
-        L_NUM = L::L_NUM + L::R_NUM,
-        R_NUM = R::L_NUM + R::R_NUM
+        UPPER = L::UPPER - R::UPPER
     };
+
     //Evaluates the expression, x is the array of variables
     //This function should be used by external callers.
     static inline int eval(int x[]) {
         int i = 0;
-        return L:: template _eval<0>(x) - R:: template _eval<L_NUM>(x);
+        return L::eval(x, i) - R::eval(x, i);
     };
-private:    
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) - R:: template _eval<L_NUM + I>(x);
+
+    //Evaluates the expression, x is the array of variables, i is the array index
+    //This function should be used by other binary operator classes
+    static inline int eval(int x[], int &i) {
+        return L::eval(x, i) - R::eval(x, i);
     };
 };
 
-//Handles division
+//Handles integer division -- remainders are discarded
 //L is the left subexpression
 //R is the right subexpression
-template<class L, class R> 
+template<class L, class R>
 struct DIV {
-private:   
-    template <int I>
-    static inline int _eval(int x[]) {
-        return L:: template _eval<I>(x) / R:: template _eval<L_NUM + I>(x);
-    };
-
+    
     //x[a, b] / x[c, d]
     static const int a = L::LOWER;
     static const int b = L::UPPER;
@@ -271,27 +213,24 @@ private:
     static const int max_neg = (c <= -1 && d >= -1) ? ((max_ab > -a) ? max_ab : -a) : max_ab;
     static const int MAX = (c <= 1 && d >=1) ? ((max_neg > b) ? max_neg :  b) : max_neg;
 
-    //All other operators classes are defined as public to allow access to _eval
-    template<class FRIEND_T1, class FREIND_T2> friend struct ADD;
-    template<class FRIEND_T1, class FREIND_T2> friend struct MULT;
-    template<class FRIEND_T1, class FREIND_T2> friend struct DIV;
-    template<class FRIEND_T1, class FREIND_T2> friend struct SUB;
-    template<int FRIEND_T1> friend struct LIT;
-    template<class FRIEND_T1> friend struct X;
-
-public: 
     enum {
-        LOWER = MIN,
-        UPPER = MAX,
-        L_NUM = L::L_NUM + L::R_NUM,
-        R_NUM = R::L_NUM + R::R_NUM
+        LOWER = MIN, 
+        UPPER = MAX
     };
+
     //Evaluates the expression, x is the array of variables
     //This function should be used by external callers.
     static inline int eval(int x[]) {
-        int i = 0;
-        return L:: template _eval<0>(x) / R:: template _eval<L_NUM>(x);
+        int i = 0; 
+        return L::eval(x) / R::eval(x);
     };
+    
+    //Evaluates the expression, x is the array of variables, i is the array index
+    //This function should be used by other binary operator classes
+    static inline int eval(int x[], int &i) {
+        return L::eval(x, i) / R::eval(x);
+    }
 };
+
 
 #endif
